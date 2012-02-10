@@ -1,0 +1,110 @@
+<?php
+// $Id$
+/**
+ * @file
+ */
+ /**
+  * Implrmrntation hook_menu().
+  */
+function annotate_perm(){
+    return array('administer annotate','create annotation','edit own annotation','edit any annotation','delete own annotation','delete any annotation');
+    
+    
+}
+function annotate_menu() {
+	$items['admin/settings/annotate'] = array(
+	'title'  => t('Annotate Settings'),
+        'type' => MENU_LOCAL_TASK,
+	'description' => t('Annotate settings'),
+	'page callback' => 'drupal_get_form',
+	'page arguments' => array('annotate_admin_settings'),	
+	'access arguments' => array('administer annotate'),
+	);
+
+	return $items;
+	
+}
+/**
+ * Implementation admin_settings()
+ */
+function annotate_admin_settings() {
+	$form['annotate_nodetypes'] = array(
+		'#type' => 'checkboxes',
+		'#title' => t('title'),
+		'#options' => node_get_types('names'),
+		'#default_value' => variable_get('annotate_nodetypes', array('story')),
+		'#description' => t('desc')	
+	);
+	return system_settings_form($form);
+	
+}
+/**
+ *
+ */
+function annotate_nodeapi(&$node,$op,$teaser,$page){
+	switch ($op) {
+		case 'view':
+			global $user;
+			if ($teaser || $user->uid == 0) {
+				break;
+			}
+			$types_to_annotate = variable_get('annotate_nodetypes', array('story'));
+			if (!in_array($node->type, $types_to_annotate)) {
+				break;
+			}
+			$result = db_query("SELECT note FROM {annotate} WHERE uid = %d AND nid = %d",$user->uid,$node->nid);
+			$node->annotation = db_result($result);
+			$node->content['annotation_form'] = array(
+				'#value' => drupal_get_form('annotate_entry_form',$node),
+				'#weight' => 10
+			);	
+	}
+	
+}
+/** 
+ * Implementation annotate_entry_form().  
+ */ 
+function annotate_entry_form($form_state, $param1) { 
+  $form['annotate'] = array( 
+    '#type'  => 'fieldset', 
+    '#title' => t('Annotations') 
+  ); 
+   
+  $form['annotate']['nid'] = array( 
+    '#type'  => 'value', 
+    '#value' => $param1->nid 
+  ); 
+   
+  $form['annotate']['note'] = array( 
+    '#type'          => 'textarea', 
+    '#title'         => t('Notes'), 
+    '#default_value' => $param1->annotation, 
+    '#description'   =>  t('Make your personal annotations about this content here.
+        Only you (and the site administrator) will be able to see them') 
+  ); 
+   
+  $form['annotate']['submit'] = array( 
+    '#type'  => 'submit', 
+    '#value' => t('Update') 
+  ); 
+ 
+  return $form;
+}
+
+/** 
+ * ��������� ��������� � ���� ������ 
+ */ 
+function annotate_entry_form_submit($form, &$form_state) { 
+  global $user; 
+  $nid = $form_state['values']['nid']; 
+  $note = $form_state['values']['note']; 
+  db_query("DELETE FROM {annotate} WHERE uid = %d AND nid = %d", $user->uid,
+$nid); 
+  $result =  db_query("INSERT INTO {annotate} (uid, nid, note, timestamp) 
+VALUES(%d, %d, '%s', %d)", $user->uid, $nid, $note, time()); 
+  if ($result) { 
+    drupal_set_message(t('Youe annotation will be saved.')); 
+  } else { 
+    drupal_set_message(t('We have some problems. Your annotation will not be saved'));    
+  } 
+}  

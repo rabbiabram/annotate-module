@@ -1,0 +1,59 @@
+<?php 
+// $Id$ 
+
+/**
+ * Implementation of hook_scheme()
+ *
+ */
+function annotate_schema() {
+	$schema['annotate'] = array(
+		'description' => t('Stores node annotations that users write.'),
+		'fields' => array(
+			'uid' => array(
+				'description' => t('The primary identifer for a user'),
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0
+			),
+			'nid' => array(
+				'description' => t('The primary identifer for a node'),
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0
+				),
+			'note' => array(
+				'description' => t('The node annotation text'),
+				'type' => 'text',
+				'size' => 'big',
+				'not null' => TRUE			
+			),
+			'timestamp' => array(
+				'description' => t('A timestamp of annotation'),
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0
+			)
+		
+		),
+		'primary key' => array('uid','nid'),
+	
+	);
+	return $schema;
+
+}
+/**
+ * Implementation of hook_install()
+ *
+ */
+function annotate_install(){
+	drupal_install_schema('annotate');
+	
+}
+/**
+ * Implementation of hook_uninstall()
+ *
+ */
+function annotate_uninstall(){
+	drupal_uninstall_schema('annotate');
+
+}

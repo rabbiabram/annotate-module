@@ -1,0 +1,6 @@
+; $Id$
+name = Anotate
+description = Allows users to annotate node.
+package = Example
+version = VERSION
+core = 6.x
